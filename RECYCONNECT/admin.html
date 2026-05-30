@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+
+  <style>
+
+    body{
+      font-family: Arial;
+      background:#111;
+      color:white;
+      padding:20px;
+    }
+
+    h1{
+      text-align:center;
+      margin-bottom:20px;
+    }
+
+    table{
+      width:100%;
+      border-collapse: collapse;
+      background:white;
+      color:black;
+    }
+
+    th, td{
+      border:1px solid #ccc;
+      padding:10px;
+      text-align:center;
+    }
+
+    th{
+      background:green;
+      color:white;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<h1>Admin Dashboard</h1>
+
+<table>
+
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Email</th>
+      <th>Waste Type</th>
+      <th>Weight</th>
+      <th>Address</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+
+  <tbody id="tableBody"></tbody>
+
+</table>
+
+<script>
+
+async function loadRequests() {
+
+  const response = await fetch("http://localhost:5000/admin/requests");
+
+  const data = await response.json();
+
+  const tableBody = document.getElementById("tableBody");
+
+  data.forEach(item => {
+
+    tableBody.innerHTML += `
+      <tr>
+        <td>${item.name}</td>
+        <td>${item.email}</td>
+        <td>${item.waste_type}</td>
+        <td>${item.weight}</td>
+        <td>${item.address}</td>
+        <td>${item.status}</td>
+      </tr>
+    `;
+
+  });
+
+}
+
+loadRequests();
+
+</script>
+
+</body>
+</html>

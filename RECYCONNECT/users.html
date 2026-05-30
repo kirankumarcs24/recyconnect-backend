@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8" />
+
+  <meta name="viewport"
+        content="width=device-width,initial-scale=1" />
+
+  <title>Users - RecyConnect</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@500;700;900&family=Roboto:wght@400;700&display=swap"
+        rel="stylesheet">
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&family=Roboto:wght@400;700;900&display=swap"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+  <header class="site-header">
+
+    <div class="wrap">
+
+      <div class="brand">
+
+        <div class="logo">♻️</div>
+
+        <h1>RecyConnect</h1>
+
+      </div>
+
+      <nav class="site-nav">
+
+        <a href="admin-dashboard.html">
+          Dashboard
+        </a>
+
+        <a href="requests.html">
+          Requests
+        </a>
+
+        <a href="users.html"
+           class="active">
+          Users
+        </a>
+
+        <a href="analytics.html">
+          Analytics
+        </a>
+
+        <a href="admin-login.html">
+          Logout
+        </a>
+
+      </nav>
+
+    </div>
+
+  </header>
+
+  <main class="wrap section">
+
+    <h2 style="color:#fff; margin-bottom:20px;">
+
+      Registered Users
+
+    </h2>
+
+    <div class="table-container">
+
+      <table class="custom-table">
+
+        <thead>
+
+          <tr>
+
+            <th>Name</th>
+
+            <th>Email</th>
+
+            <th>Points</th>
+
+          </tr>
+
+        </thead>
+
+        <tbody id="usersTable">
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+
+    <div class="wrap footer-grid">
+
+      <p class="muted small">
+
+        © 2026 RecyConnect
+
+      </p>
+
+      <nav class="footer-nav">
+
+        <a href="users.html">
+          Users
+        </a>
+
+        <a href="about.html">
+          About
+        </a>
+
+      </nav>
+
+    </div>
+
+  </footer>
+
+  <script>
+
+    async function loadUsers() {
+
+      try {
+
+        const response =
+          await fetch("http://localhost:5000/admin/users");
+
+        const data = await response.json();
+
+        const usersTable =
+          document.getElementById("usersTable");
+
+        usersTable.innerHTML = "";
+
+        data.forEach(user => {
+
+          usersTable.innerHTML += `
+
+            <tr>
+
+              <td>${user.name}</td>
+
+              <td>${user.email}</td>
+
+              <td>${user.points}</td>
+
+            </tr>
+
+          `;
+
+        });
+
+      } catch (error) {
+
+        console.log(error);
+
+      }
+
+    }
+
+    loadUsers();
+
+  </script>
+
+</body>
+
+</html>

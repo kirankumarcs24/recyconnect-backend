@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8" />
+
+  <meta name="viewport"
+        content="width=device-width,initial-scale=1" />
+
+  <title>Requests - RecyConnect</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@500;700;900&display=swap"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+
+    .table-container {
+
+      overflow-x: auto;
+      background: rgba(255,255,255,0.05);
+      border-radius: 20px;
+      padding: 20px;
+
+    }
+
+    .custom-table {
+
+      width: 100%;
+      border-collapse: collapse;
+
+    }
+
+    .custom-table th,
+    .custom-table td {
+
+      padding: 20px 14px;
+      text-align: left;
+      color: white;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      vertical-align: middle;
+
+    }
+
+    .custom-table th {
+
+      color: #c9cf27;
+      font-size: 1.1rem;
+
+    }
+
+    .status-badge {
+
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: bold;
+      color: white;
+      display: inline-block;
+
+    }
+
+    .pending {
+
+      background: #ff9800;
+
+    }
+
+    .approved {
+
+      background: #28a745;
+
+    }
+
+    .rejected {
+
+      background: #e53935;
+
+    }
+
+    .action-buttons {
+
+      display: flex;
+      gap: 10px;
+      align-items: center;
+
+    }
+
+    .action-buttons button {
+
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      color: white;
+      font-size: 13px;
+      font-weight: bold;
+      transition: 0.3s;
+
+    }
+
+    .approve-btn {
+
+      background: #28a745;
+
+    }
+
+    .approve-btn:hover {
+
+      background: #23913d;
+
+    }
+
+    .reject-btn {
+
+      background: #e53935;
+
+    }
+
+    .reject-btn:hover {
+
+      background: #c62828;
+
+    }
+
+    /* NOTIFICATION */
+
+    .notification {
+
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #28a745;
+      color: white;
+      padding: 14px 22px;
+      border-radius: 10px;
+      font-weight: bold;
+      display: none;
+      z-index: 1000;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+
+      animation: slideIn 0.4s ease;
+
+    }
+
+    @keyframes slideIn {
+
+      from {
+
+        opacity: 0;
+        transform: translateX(100px);
+
+      }
+
+      to {
+
+        opacity: 1;
+        transform: translateX(0);
+
+      }
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <!-- NOTIFICATION -->
+  <div id="notification"
+       class="notification">
+
+  </div>
+
+  <header class="site-header">
+
+    <div class="wrap">
+
+      <div class="brand">
+
+        <div class="logo">♻️</div>
+
+        <h1>RecyConnect</h1>
+
+      </div>
+
+      <nav class="site-nav">
+
+        <a href="admin-dashboard.html">
+          Dashboard
+        </a>
+
+        <a href="requests.html"
+           class="active">
+          Requests
+        </a>
+
+        <a href="users.html">
+          Users
+        </a>
+
+        <a href="analytics.html">
+          Analytics
+        </a>
+
+        <a href="admin-login.html">
+          Logout
+        </a>
+
+      </nav>
+
+    </div>
+
+  </header>
+
+  <main class="wrap section">
+
+    <h2 style="color:white; margin-bottom:25px;">
+
+      Waste Requests Management
+
+    </h2>
+
+    <div class="table-container">
+
+      <table class="custom-table">
+
+        <thead>
+
+          <tr>
+
+            <th>Name</th>
+
+            <th>Email</th>
+
+            <th>Waste Type</th>
+
+            <th>Weight</th>
+
+            <th>Address</th>
+
+            <th>Status</th>
+
+            <th style="width:200px;">
+              Actions
+            </th>
+
+          </tr>
+
+        </thead>
+
+        <tbody id="tableBody">
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+
+    <div class="wrap footer-grid">
+
+      <p class="muted small">
+
+        © 2026 RecyConnect
+
+      </p>
+
+      <nav class="footer-nav">
+
+        <a href="requests.html">
+          Requests
+        </a>
+
+        <a href="about.html">
+          About
+        </a>
+
+      </nav>
+
+    </div>
+
+  </footer>
+
+ <script>
+
+function getStatusClass(status) {
+
+  if (status === "Pending") return "pending";
+
+  if (status === "Approved") return "approved";
+
+  if (status === "Rejected") return "rejected";
+
+  return "";
+
+}
+
+function showNotification(message, color="#28a745") {
+
+  const notification =
+    document.getElementById("notification");
+
+  notification.innerHTML = message;
+
+  notification.style.background = color;
+
+  notification.style.display = "block";
+
+  setTimeout(() => {
+
+    notification.style.display = "none";
+
+  }, 6000);
+
+}
+
+async function loadRequests() {
+
+  try {
+
+    const response =
+      await fetch("http://localhost:5000/admin/requests");
+
+    const data = await response.json();
+
+    const tableBody =
+      document.getElementById("tableBody");
+
+    tableBody.innerHTML = "";
+
+    data.forEach(item => {
+
+      tableBody.innerHTML += `
+
+        <tr>
+
+          <td>${item.name}</td>
+
+          <td>${item.email}</td>
+
+          <td>${item.waste_type}</td>
+
+          <td>${item.weight} KG</td>
+
+          <td>${item.address}</td>
+
+          <td>
+
+            <span class="status-badge ${getStatusClass(item.status)}">
+
+              ${item.status}
+
+            </span>
+
+          </td>
+
+          <td>
+
+            <div class="action-buttons">
+
+              <button
+                class="approve-btn"
+                onclick="updateStatus(
+                  ${item.id},
+                  'Approved',
+                  '${item.name}',
+                  ${item.weight},
+                  '${item.waste_type}'
+                )">
+
+                Approve
+
+              </button>
+
+              <button
+                class="reject-btn"
+                onclick="updateStatus(
+                  ${item.id},
+                  'Rejected',
+                  '${item.name}',
+                  ${item.weight},
+                  '${item.waste_type}'
+                )">
+
+                Reject
+
+              </button>
+
+            </div>
+
+          </td>
+
+        </tr>
+
+      `;
+
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+  }
+
+}
+
+async function updateStatus(
+  id,
+  status,
+  userName,
+  weight,
+  wasteType
+) {
+
+  try {
+
+    const response = await fetch(
+
+      `http://localhost:5000/admin/update-status/${id}`,
+
+      {
+
+        method: "PUT",
+
+        headers: {
+
+          "Content-Type": "application/json"
+
+        },
+
+        body: JSON.stringify({
+
+          status: status
+
+        })
+
+      }
+
+    );
+
+    const result = await response.json();
+
+    console.log(result);
+
+    alert("Status Updated Successfully");
+
+    // RELOAD TABLE
+    loadRequests();
+
+  }
+
+  catch(error) {
+
+    console.log("ERROR:", error);
+
+    alert("Approve button failed");
+
+  }
+
+}
+
+loadRequests();
+
+</script>
+</body>
+
+</html

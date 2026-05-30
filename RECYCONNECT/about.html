@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>About Us - RecyConnect</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 30px;
+    }
+    .team-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+    .team-card:hover {
+      transform: translateY(-5px);
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .team-role {
+      color: #9ca81a;
+      font-size: 0.9rem;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    .usn {
+      color: #aaa;
+      font-size: 0.85rem;
+    }
+    .college-branding {
+      text-align: center;
+      margin-top: 50px;
+      padding-top: 30px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="wrap">
+      <div class="brand">
+        <div class="logo">♻️</div>
+        <h1>RecyConnect</h1>
+      </div>
+      <nav class="site-nav">
+        <a href="index.html">Home</a>
+        <a href="login.html">Login</a>
+        <a href="about.html" class="active">About</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap section">
+    
+    <div style="margin-bottom: 50px;">
+      <h2 style="color: #fff; margin-bottom: 20px;">Why RecyConnect?</h2>
+      <p style="line-height: 1.6; color: #ddd; max-width: 800px;">
+        Waste management is one of the biggest challenges of the 21st century. 
+        Most recyclable materials end up in landfills because people lack the incentive 
+        or convenient means to recycle. 
+      </p>
+      <p style="line-height: 1.6; color: #ddd; max-width: 800px; margin-top: 15px;">
+        <strong>RecyConnect</strong> was built to solve this by "Turning Waste into Worth." 
+        We bridge the gap between households and recycling centers by providing a transparent 
+        points-based system that rewards users for every kilogram of waste they recycle.
+      </p>
+    </div>
+
+    <h3 style="color: #fff; border-left: 4px solid #9ca81a; padding-left: 10px;">Meet the Team</h3>
+    
+    <div class="team-grid">
+      <div class="team-card">
+        <div style="font-size: 3rem; margin-bottom: 10px;">👩‍💻</div>
+        <h4 style="color: #fff; margin-bottom: 5px;">Hrithika Rajesh</h4>
+        <div class="team-role">Lead Developer</div>
+        <div class="usn">1BM24CS120</div>
+      </div>
+
+      <div class="team-card">
+        <div style="font-size: 3rem; margin-bottom: 10px;">👨‍💻</div>
+        <h4 style="color: #fff; margin-bottom: 5px;">Kiran Kumar</h4>
+        <div class="team-role">Backend Engineer</div>
+        <div class="usn">1BM24CS138</div>
+      </div>
+
+      <div class="team-card">
+        <div style="font-size: 3rem; margin-bottom: 10px;">👨‍💻</div>
+        <h4 style="color: #fff; margin-bottom: 5px;">Koshalendar</h4>
+        <div class="team-role">Frontend Designer</div>
+        <div class="usn">1BM24CS139</div>
+      </div>
+    </div>
+
+    <div class="college-branding">
+      <h3 style="color: #fff; margin-bottom: 10px;">BMS COLLEGE OF ENGINEERING</h3>
+      <p style="color: #ccc;">Department of Computer Science</p>
+      
+      <div style="margin-top: 20px; display: inline-block; background: rgba(156, 168, 26, 0.1); padding: 15px 30px; border-radius: 50px; border: 1px solid #9ca81a;">
+        <span style="color: #aaa;">Under the guidance of:</span><br>
+        <strong style="color: #fff; font-size: 1.1rem;">Prof. Sheetal V A</strong>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-grid">
+      <p class="muted small">© 2025 RecyConnect</p>
+      <nav class="footer-nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="about.html">About</a>
+      </nav>
+    </div>
+  </footer>
+
+</body>
+</html>

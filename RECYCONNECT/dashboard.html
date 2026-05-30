@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>User Dashboard - RecyConnect</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@500;700;900&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <div class="brand">
+        <div class="logo">♻️</div>
+        <h1>RecyConnect</h1>
+      </div>
+      <nav class="site-nav">
+        <a href="index.html">Home</a>
+        <a href="register.html">Register</a>
+        <a href="waste-form.html">Submit Waste</a>
+        <a href="redeem.html">Redeem</a>
+      </nav>
+      <button class="hamburger" onclick="document.body.classList.toggle('nav-open')">☰</button>
+    </div>
+  </header>
+
+  <main class="wrap section">
+    <h2 id="greeting" style="color:#fff; margin-bottom:20px">Welcome back!</h2>
+    
+    <div class="dash-stats">
+      <div class="stat-card">
+        <h3 id="points">0</h3>
+        <p>Current Points</p>
+      </div>
+      <div class="stat-card">
+        <h3 id="recycled">0 kg</h3>
+        <p>Total Recycled</p>
+      </div>
+      <div class="stat-card">
+        <h3 id="trees">0</h3>
+        <p>Trees Saved Equiv.</p>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 20px; color: #fff;">
+      <label for="dashboardEmail" style="margin-right: 10px;">Your Email:</label>
+      <input type="email" id="dashboardEmail" class="form-control" placeholder="your@email.com" style="width: 300px; display: inline-block;">
+    </div>
+
+    <h3 style="color:#fff; margin-bottom:15px">Recent Activity</h3>
+    <div class="table-container">
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Activity</th>
+            <th>Weight</th>
+            <th>Points</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="activityTable">
+          <tr>
+            <td colspan="5" style="text-align: center; color: #aaa;">Load your data by entering your email above</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-grid">
+      <p class="muted small">© 2026 RecyConnect</p>
+      <nav class="footer-nav"><a href="dashboard.html">Dashboard</a><a href="about.html">About</a></nav>
+    </div>
+  </footer>
+
+  <script>
+    const emailInput = document.getElementById('dashboardEmail');
+    const greetingEl = document.getElementById('greeting');
+    const pointsEl = document.getElementById('points');
+    const recycledEl = document.getElementById('recycled');
+    const treesEl = document.getElementById('trees');
+    const activityTable = document.getElementById('activityTable');
+
+    // Load email from localStorage
+    const savedEmail = localStorage.getItem('userEmail');
+    if (savedEmail) {
+      emailInput.value = savedEmail;
+      loadDashboard();
+    }
+
+    async function loadDashboard() {
+      const email = emailInput.value;
+      if (!email) {
+        activityTable.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #aaa;">Please enter your email</td></tr>';
+        return;
+      }
+
+      try {
+        const response = await fetch(`/user/${encodeURIComponent(email)}`);
+        const data = await response.json();
+
+        if (response.ok) {
+          const user = data.user;
+          greetingEl.textContent = `Welcome back, ${user.name}!`;
+          pointsEl.textContent = user.points;
+          recycledEl.textContent = (parseFloat(user.totalRecycled) || 0).toFixed(1) + ' kg';
+          treesEl.textContent = Math.floor((parseFloat(user.totalRecycled) || 0) / 7); // Approximate CO2 offset
+
+          // Load activity
+          if (data.activity && data.activity.length > 0) {
+            activityTable.innerHTML = data.activity.map(item => `
+              <tr>
+                <td>${new Date(item.created_at).toLocaleDateString()}</td>
+                <td>${item.waste_type || 'Activity'}</td>
+                <td>${item.weight ? item.weight + ' kg' : '-'}</td>
+                <td style="color:#9ca81a">${item.points_earned ? '+' + item.points_earned : 'N/A'}</td>
+                <td>${item.status}</td>
+              </tr>
+            `).join('');
+          } else {
+            activityTable.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #aaa;">No activity yet. Start submitting waste!</td></tr>';
+          }
+        } else {
+          activityTable.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #ff6b6b;">User not found</td></tr>';
+        }
+      } catch (error) {
+        activityTable.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #ff6b6b;">Error loading data: ' + error.message + '</td></tr>';
+      }
+    }
+
+    emailInput.addEventListener('change', loadDashboard);
+    emailInput.addEventListener('blur', loadDashboard);
+  </script>
+</body>
+</html>

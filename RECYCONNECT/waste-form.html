@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Submit Waste - RecyConnect</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@500;700;900&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <div class="brand">
+        <div class="logo">♻️</div>
+        <h1>RecyConnect</h1>
+      </div>
+      <nav class="site-nav">
+        <a href="index.html">Home</a>
+        <a href="register.html">Register</a>
+        <a href="waste-form.html" class="active">Submit Waste</a>
+        <a href="redeem.html">Redeem</a>
+      </nav>
+      <button class="hamburger" onclick="document.body.classList.toggle('nav-open')">☰</button>
+    </div>
+  </header>
+
+  <main class="wrap section">
+    <div class="form-box">
+      <h2>Schedule Pickup</h2>
+      <form id="wasteForm">
+        <div class="form-group">
+          <label>Email (from registration)</label>
+          <input type="email" id="email" class="form-control" placeholder="your@email.com" required>
+        </div>
+        <div class="form-group">
+          <label>Waste Type</label>
+          <select id="wasteType" class="form-control" required>
+            <option value="">Select waste type</option>
+            <option value="Plastic Bottles">Plastic Bottles</option>
+            <option value="Paper / Cardboard">Paper / Cardboard</option>
+            <option value="E-Waste">E-Waste</option>
+            <option value="Metal Cans">Metal Cans</option>
+            <option value="Biodegradable Substance">Biodegradable Substance</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Approx Weight (kg)</label>
+          <input type="number" id="weight" class="form-control" placeholder="e.g. 5" step="0.1" required>
+        </div>
+        <div class="form-group">
+          <label>Pickup Address</label>
+          <textarea id="address" class="form-control" rows="3" placeholder="Apartment, Street, City" required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Preferred Date</label>
+          <input type="date" id="pickupDate" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%">Submit Request</button>
+        <p id="message" style="text-align:center; margin-top:15px; font-size:0.9rem; opacity:0.8;"></p>
+      </form>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-grid">
+      <p class="muted small">© 2025 RecyConnect</p>
+      <nav class="footer-nav"><a href="dashboard.html">Dashboard</a><a href="about.html">About</a></nav>
+    </div>
+  </footer>
+
+  <script>
+    const wasteForm = document.getElementById('wasteForm');
+    const messageDiv = document.getElementById('message');
+
+    wasteForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const wasteType = document.getElementById('wasteType').value;
+      const weight = parseFloat(document.getElementById('weight').value);
+      const address = document.getElementById('address').value;
+      const pickupDate = document.getElementById('pickupDate').value;
+
+      try {
+        const response = await fetch('/submit-waste', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, wasteType, weight, address, pickupDate })
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          messageDiv.textContent = `Pickup Scheduled! ${data.pointsEarned} Points Pending.`;
+          messageDiv.style.color = '#9ca81a';
+          localStorage.setItem('userEmail', email);
+          setTimeout(() => window.location.href = 'dashboard.html', 1500);
+        } else {
+          messageDiv.textContent = 'Error: ' + (data.error || 'Submission failed');
+          messageDiv.style.color = '#ff6b6b';
+        }
+      } catch (error) {
+        messageDiv.textContent = 'Connection error: ' + error.message;
+        messageDiv.style.color = '#ff6b6b';
+      }
+    });
+  </script>
+</body>
+</html>

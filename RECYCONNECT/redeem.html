@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Redeem Rewards - RecyConnect</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@500;700;900&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <div class="brand">
+        <div class="logo">♻️</div>
+        <h1>RecyConnect</h1>
+      </div>
+      <nav class="site-nav">
+        <a href="index.html">Home</a>
+        <a href="register.html">Register</a>
+        <a href="waste-form.html">Submit Waste</a>
+        <a href="redeem.html" class="active">Redeem</a>
+      </nav>
+      <button class="hamburger" onclick="document.body.classList.toggle('nav-open')">☰</button>
+    </div>
+  </header>
+
+  <main class="wrap section">
+    <div class="section-header">
+      <h2 style="font-family:'Poppins', sans-serif; font-weight:800; font-size:36px;">Rewards Store</h2>
+      <p style="opacity:0.9; font-size:1.1rem;">Your Email: <input type="email" id="userEmail" class="form-control" placeholder="your@email.com" style="width:300px; display:inline-block; margin-left:10px;" required></p>
+      <p style="opacity:0.9; font-size:1.1rem; margin-top:10px;">Your Balance: <strong id="pointsDisplay" style="color:#ffeb99; font-size:1.3rem;">0 Points</strong></p>
+    </div>
+    
+    <div class="cards-grid">
+      <div class="card" style="text-align:center; border:1px solid rgba(255,255,255,0.2);">
+        <div style="font-size:45px; margin-bottom:15px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));">🎟️</div>
+        <h4>$10 Grocery Voucher</h4>
+        <p>Redeem for valid local grocery stores.</p>
+        <br>
+        <button class="btn btn-primary redeem-btn" data-reward="$10 Grocery Voucher" data-points="1000" style="width:100%; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">Redeem (1000 Pts)</button>
+      </div>
+
+      <div class="card" style="text-align:center; border:1px solid rgba(255,255,255,0.2);">
+        <div style="font-size:45px; margin-bottom:15px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));">🌱</div>
+        <h4>Plant a Tree</h4>
+        <p>We will plant a tree in your name.</p>
+        <br>
+        <button class="btn btn-primary redeem-btn" data-reward="Plant a Tree" data-points="500" style="width:100%; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">Donate (500 Pts)</button>
+      </div>
+
+      <div class="card" style="text-align:center; border:1px solid rgba(255,255,255,0.2);">
+        <div style="font-size:45px; margin-bottom:15px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));">☕</div>
+        <h4>Coffee Discount</h4>
+        <p>20% off at partner cafes.</p>
+        <br>
+        <button class="btn btn-primary redeem-btn" data-reward="Coffee Discount" data-points="200" style="width:100%; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">Redeem (200 Pts)</button>
+      </div>
+    </div>
+
+    <p id="message" style="text-align:center; margin-top:20px; font-size:1rem; opacity:0.9;"></p>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-grid">
+      <p class="muted small">© 2025 RecyConnect</p>
+      <nav class="footer-nav"><a href="dashboard.html">Dashboard</a><a href="about.html">About</a></nav>
+    </div>
+  </footer>
+
+  <script>
+    const userEmailInput = document.getElementById('userEmail');
+    const pointsDisplay = document.getElementById('pointsDisplay');
+    const messageDiv = document.getElementById('message');
+    const redeemButtons = document.querySelectorAll('.redeem-btn');
+
+    // Load email from localStorage
+    const savedEmail = localStorage.getItem('userEmail');
+    if (savedEmail) {
+      userEmailInput.value = savedEmail;
+      loadUserPoints();
+    }
+
+    async function loadUserPoints() {
+      const email = userEmailInput.value;
+      if (!email) return;
+
+      try {
+        const response = await fetch(`/user/${encodeURIComponent(email)}`);
+        const data = await response.json();
+        if (response.ok) {
+          pointsDisplay.textContent = data.user.points + ' Points';
+        }
+      } catch (error) {
+        console.error('Error loading user points:', error);
+      }
+    }
+
+    userEmailInput.addEventListener('change', loadUserPoints);
+
+    redeemButtons.forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const email = userEmailInput.value;
+        const rewardType = btn.dataset.reward;
+        const pointsRequired = parseInt(btn.dataset.points);
+
+        if (!email) {
+          messageDiv.textContent = 'Please enter your email';
+          messageDiv.style.color = '#ff6b6b';
+          return;
+        }
+
+        try {
+          const response = await fetch('/redeem', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, rewardType, pointsRequired })
+          });
+
+          const data = await response.json();
+          if (response.ok) {
+            messageDiv.textContent = `Thank you! ${rewardType} reward redeemed successfully.`;
+            messageDiv.style.color = '#9ca81a';
+            loadUserPoints();
+          } else {
+            messageDiv.textContent = 'Error: ' + (data.error || 'Redemption failed');
+            messageDiv.style.color = '#ff6b6b';
+          }
+        } catch (error) {
+          messageDiv.textContent = 'Connection error: ' + error.message;
+          messageDiv.style.color = '#ff6b6b';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

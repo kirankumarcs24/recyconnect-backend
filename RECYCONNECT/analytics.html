@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8" />
+
+  <meta name="viewport"
+        content="width=device-width,initial-scale=1" />
+
+  <title>Analytics - RecyConnect</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@500;700;900&display=swap"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+
+    .top-cards {
+
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px,1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+
+    }
+
+    .card {
+
+      background: rgba(255,255,255,0.08);
+      padding: 25px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+
+    }
+
+    .card h3 {
+
+      color: white;
+      margin-bottom: 10px;
+
+    }
+
+    .card p {
+
+      color: #ffce56;
+      font-size: 2rem;
+      font-weight: bold;
+
+    }
+
+    .chart-section {
+
+      background: rgba(255,255,255,0.08);
+      padding: 30px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 30px;
+
+    }
+
+    .insights {
+
+      background: rgba(255,255,255,0.08);
+      padding: 30px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.1);
+
+    }
+
+    .insights h3 {
+
+      color: white;
+      margin-bottom: 20px;
+
+    }
+
+    .insights ul {
+
+      color: #ddd;
+      line-height: 2;
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <header class="site-header">
+
+    <div class="wrap">
+
+      <div class="brand">
+
+        <div class="logo">♻️</div>
+
+        <h1>RecyConnect</h1>
+
+      </div>
+
+      <nav class="site-nav">
+
+        <a href="admin-dashboard.html">
+          Dashboard
+        </a>
+
+        <a href="requests.html">
+          Requests
+        </a>
+
+        <a href="users.html">
+          Users
+        </a>
+
+        <a href="analytics.html"
+           class="active">
+          Analytics
+        </a>
+
+        <a href="admin-login.html">
+          Logout
+        </a>
+
+      </nav>
+
+    </div>
+
+  </header>
+
+  <main class="wrap section">
+
+    <h2 style="color:white; margin-bottom:25px;">
+
+      Waste Collection Analytics
+
+    </h2>
+
+    <!-- TOP CARDS -->
+    <div class="top-cards">
+
+      <div class="card">
+
+        <h3>Total Waste Collected</h3>
+
+        <p id="totalWaste">
+
+          0 KG
+
+        </p>
+
+      </div>
+
+      <div class="card">
+
+        <h3>Highest Waste Type</h3>
+
+        <p id="highestWaste">
+
+          N/A
+
+        </p>
+
+      </div>
+
+    </div>
+
+    <!-- GRAPH -->
+    <div class="chart-section">
+
+      <canvas id="wasteChart"></canvas>
+
+    </div>
+
+    <!-- INSIGHTS -->
+    <div class="insights">
+
+      <h3>Key Insights</h3>
+
+      <ul id="insightList">
+
+      </ul>
+
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+
+    <div class="wrap footer-grid">
+
+      <p class="muted small">
+
+        © 2026 RecyConnect
+
+      </p>
+
+      <nav class="footer-nav">
+
+        <a href="analytics.html">
+          Analytics
+        </a>
+
+        <a href="about.html">
+          About
+        </a>
+
+      </nav>
+
+    </div>
+
+  </footer>
+
+  <script>
+
+    async function loadAnalytics() {
+
+      try {
+
+        const response =
+          await fetch("http://localhost:5000/admin/analytics");
+
+        const data = await response.json();
+
+        // TOP CARDS
+        document.getElementById("totalWaste")
+          .innerText =
+            data.totalWaste + " KG";
+
+        document.getElementById("highestWaste")
+          .innerText =
+            data.highestWasteType;
+
+        const wasteData = data.wasteData;
+
+        // INSIGHTS
+        const insightList =
+          document.getElementById("insightList");
+
+        insightList.innerHTML = "";
+
+        wasteData.forEach(item => {
+
+          insightList.innerHTML += `
+
+            <li>
+
+              ${item.waste_type}
+              collected:
+              ${item.total_weight} KG
+
+            </li>
+
+          `;
+
+        });
+
+        // GRAPH DATA
+        const labels =
+          wasteData.map(item => item.waste_type);
+
+        const weights =
+          wasteData.map(item =>
+            parseFloat(item.total_weight)
+          );
+
+        // CHART
+        const ctx =
+          document.getElementById("wasteChart");
+
+        new Chart(ctx, {
+
+          type: "bar",
+
+          data: {
+
+            labels: labels,
+
+            datasets: [{
+
+              data: weights,
+
+              backgroundColor: [
+
+                "#ff6384",
+                "#36a2eb",
+                "#ffce56",
+                "#4bc0c0",
+                "#9966ff",
+                "#ff9f40"
+
+              ],
+
+              borderWidth: 2
+
+            }]
+
+          },
+
+          options: {
+
+            responsive: true,
+
+            plugins: {
+
+              title: {
+
+                display: true,
+
+                text: "Waste Collection Analysis",
+
+                color: "white",
+
+                font: {
+
+                  size: 22
+
+                }
+
+              },
+
+              legend: {
+
+                display: false
+
+              }
+
+            },
+
+            scales: {
+
+              x: {
+
+                ticks: {
+
+                  color: "white"
+
+                }
+
+              },
+
+              y: {
+
+                ticks: {
+
+                  color: "white"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        });
+
+      } catch (error) {
+
+        console.log(error);
+
+      }
+
+    }
+
+    loadAnalytics();
+
+  </script>
+
+</body>
+
+</html>

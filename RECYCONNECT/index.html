@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RecyConnect — Turn Waste into Worth</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@500;700;900&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="wrap">
+      <div class="brand">
+        <div class="logo">♻️</div>
+        <h1>RecyConnect</h1>
+      </div>
+      <nav class="site-nav">
+        <a href="index.html" class="active">Home</a>
+        <a href="register.html">Register</a>
+        <a href="waste-form.html">Submit Waste</a>
+        <a href="redeem.html">Redeem</a>
+      </nav>
+      <button class="hamburger" onclick="document.body.classList.toggle('nav-open')">☰</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div class="hero-left">
+          <h2 class="hero-title">
+            Turn Waste into <span class="worth-gold">Worth</span>
+          </h2>
+          <p class="hero-lead">
+            RecyConnect connects communities and recyclers — rewarding eco-friendly actions with points that convert to cash or donations.
+          </p>
+          <div class="hero-ctas">
+            <a href="register.html" class="btn btn-primary">Get Started</a>
+            <a href="#how" class="btn btn-outline">How it works</a>
+          </div>
+          <ul class="quick-stats">
+            <li><strong>85 kg</strong><span>Recycled</span></li>
+            <li><strong>570</strong><span>Eco-Points</span></li>
+            <li><strong>3</strong><span>Partners</span></li>
+          </ul>
+        </div>
+
+        <div class="hero-right">
+          <div class="planet-wrap">
+            <svg class="planet" viewBox="0 0 200 200">
+              <defs>
+                <radialGradient id="g1" cx="40%" cy="30%">
+                  <stop offset="0%" stop-color="#41994d"/>
+                  <stop offset="100%" stop-color="#006572"/>
+                </radialGradient>
+                <filter id="soft"><feGaussianBlur stdDeviation="5" result="b"/><feBlend in="SourceGraphic" in2="b"/></filter>
+              </defs>
+              <circle cx="100" cy="100" r="84" fill="url(#g1)" filter="url(#soft)"/>
+              <path d="M60 80 q30 -20 50 0 q-10 20 -30 24 q-28 -8 -20 -24" fill="#9ca81a" opacity="0.9"/>
+              <path d="M120 110 q20 10 30 0 q-6 12 -18 18 q-20 -6 -12 -18" fill="#ffa511" opacity="0.2"/>
+            </svg>
+            <div class="floating a"></div>
+            <div class="floating b"></div>
+            <div class="floating c"></div>
+          </div>
+
+          <!-- Chatbot below planet -->
+          <div style="margin-top: 25px; background: rgba(255,255,255,0.12); padding: 18px; border-radius: 12px; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15);">
+            <h4 style="color: #ffa511; margin-bottom: 8px; font-size: 0.95rem;">💬 Ask RecyBot</h4>
+            <p style="font-size: 0.8rem; opacity: 0.75; margin-bottom: 10px;">Questions? Ask our AI!</p>
+            
+            <div id="chatMessages" style="overflow-y: auto; max-height: 180px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 8px; background: rgba(0,0,0,0.3); font-size: 0.8rem;">
+              <div style="text-align: center; color: #aaa; padding: 12px;">
+                <p>👋 Hi!</p>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 6px;">
+              <input type="text" id="chatInput" placeholder="Ask me..." style="flex: 1; padding: 7px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.08); color: #fff; font-size: 0.8rem;">
+              <button onclick="sendChatMessage()" class="btn btn-primary" style="padding: 7px 14px; font-size: 0.8rem; white-space: nowrap;">Send</button>
+            </div>
+            <p id="chatError" style="text-align: center; margin-top: 6px; font-size: 0.7rem; color: #ff6b6b; display: none;"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="how" class="section">
+      <div class="wrap">
+        <div class="section-header">
+            <h3>How it works</h3>
+        </div>
+        <div class="cards-grid">
+            <div class="card">
+            <h4>1. Add Entry</h4>
+            <p>Record material type and weight. Points are calculated automatically.</p>
+            </div>
+            <div class="card">
+            <h4>2. Eco Wallet</h4>
+            <p>Points are stored in your wallet. Track balance and redeem for vouchers.</p>
+            </div>
+            <div class="card">
+            <h4>3. Impact</h4>
+            <p>Visualize your CO₂ savings and environmental contribution.</p>
+            </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section cta">
+      <div class="wrap cta-block">
+        <h3>Ready to start recycling?</h3>
+        <div>
+          <a href="register.html" class="btn btn-primary">Join Now</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-grid">
+      <p class="muted small">© 2026 RecyConnect</p>
+      <nav class="footer-nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="about.html">About</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    // Mobile menu close on click
+    document.querySelectorAll('.site-nav a').forEach(a => {
+      a.addEventListener('click', () => document.body.classList.remove('nav-open'));
+    });
+    
+    // Planet animation
+    const planetWrap = document.querySelector('.planet-wrap');
+    const planet = document.querySelector('.planet');
+    if (planetWrap) {
+        planetWrap.addEventListener('mousemove', e => {
+            const rect = planetWrap.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width - 0.5;
+            const y = (e.clientY - rect.top) / rect.height - 0.5;
+            planet.style.transform = `rotateY(${x * 10}deg) rotateX(${-y * 10}deg)`;
+        });
+        planetWrap.addEventListener('mouseleave', () => planet.style.transform = 'none');
+    }
+
+    // Chatbot functionality
+    window.sendChatMessage = async function() {
+      const chatInput = document.getElementById('chatInput');
+      const message = chatInput.value.trim();
+      if (!message) return;
+
+      const chatMessages = document.getElementById('chatMessages');
+      const chatError = document.getElementById('chatError');
+
+      // Add user message to chat
+      const userDiv = document.createElement('div');
+      userDiv.style.cssText = 'margin: 4px 0; text-align: right; color: #9ca81a; font-size: 0.75rem;';
+      userDiv.textContent = '📝 ' + message;
+      chatMessages.appendChild(userDiv);
+
+      chatInput.value = '';
+      chatError.style.display = 'none';
+
+      try {
+        const response = await fetch('/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message })
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          const botDiv = document.createElement('div');
+          botDiv.style.cssText = 'margin: 4px 0; padding: 5px; background: rgba(255,255,255,0.08); border-radius: 3px; color: #fff; font-size: 0.75rem; line-height: 1.3;';
+          botDiv.textContent = '🤖 ' + data.reply;
+          chatMessages.appendChild(botDiv);
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        } else {
+          chatError.textContent = 'Error';
+          chatError.style.display = 'block';
+        }
+      } catch (error) {
+        chatError.textContent = 'Connection error';
+        chatError.style.display = 'block';
+      }
+    };
+
+    // Allow Enter key to send message
+    const chatInput = document.getElementById('chatInput');
+    if (chatInput) {
+      chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          window.sendChatMessage();
+        }
+      });
+    }
+  </script>
+</body>
+</html>

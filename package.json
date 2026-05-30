@@ -1,0 +1,26 @@
+{
+  "name": "recyconnect",
+  "version": "1.0.0",
+  "description": "RecyConnect - Waste management application",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.6",
+    "drizzle-zod": "^0.8.3",
+    "express": "^4.22.2",
+    "nodemailer": "^8.0.8",
+    "openai": "^4.104.0",
+    "p-limit": "^7.2.0",
+    "p-retry": "^7.1.1",
+    "pg": "^8.21.0",
+    "zod": "^4.2.1",
+    "zod-validation-error": "^5.0.0"
+  }
+}
