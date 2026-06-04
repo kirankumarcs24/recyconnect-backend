@@ -280,35 +280,40 @@ app.post("/redeem-reward", async (req, res) => {
     console.log(`✅ Database Updated: Successfully subtracted ${cleanPointsCost} points from ${sanitizedEmail}`);
     const dynamicCouponCode = "RC-" + Math.random().toString(36).substr(2, 9).toUpperCase();
 
-    // 🛡️ ISOLATED SAFETY BUFFER: Keeps the app loader running smoothly even if email delivery drops
-    try {
-        await transporter.sendMail({
-          from: '"RecyConnect Rewards" <officialrecyconnect@gmail.com>',
-          to: sanitizedEmail,
-          subject: `🎁 Your ${rewardName} Code is Ready!`,
-          html: `
-            <div style="font-family: Arial, sans-serif; padding: 25px; max-width: 500px; border: 2px solid #3FA34D; border-radius: 15px; margin: 0 auto;">
-              <h2 style="color: #3FA34D; text-align: center;">🎉 Reward Unlocked! 🎉</h2>
-              <p>Dear <b>${userName}</b>,</p>
-              <p>You have successfully redeemed <b>${cleanPointsCost} Eco Points</b> for:</p>
-              <div style="background-color: #f4f4f4; padding: 15px; border-radius: 10px; text-align: center; margin: 20px 0; border: 1px dashed #3FA34D;">
-                <span style="font-size: 16px; color: #666; text-transform: uppercase;"><b>${rewardName}</b></span><br/>
-                <span style="font-size: 26px; color: #D9A514; letter-spacing: 2px; display: block; margin-top: 5px;"><b>${dynamicCouponCode}</b></span>
-              </div>
-              <p style="text-align: center; color: #888; font-size: 12px;">© 2026 RecyConnect Ecosystem</p>
-            </div>
-          `
-        });
-        console.log(`✉️ Email Dispatched successfully to: ${sanitizedEmail}`);
-    } catch (mailerError) {
-        console.error("❌ NODEMAILER ENGINES BLOCKED SIGNIN (Check Gmail App Passwords configuration):", mailerError);
-    }
+    // ⚡ BYPASS MECHANISM: Dispatch the mobile app's success payload status immediately to drop the loading screen.
+    // The asynchronous email task executes independently in the background.
+    res.status(200).json({ success: true, message: "Redeemed successfully!", code: dynamicCouponCode });
 
-    return res.status(200).json({ success: true, message: "Redeemed successfully!", code: dynamicCouponCode });
+    // Background asynchronous network handshake handler
+    transporter.sendMail({
+      from: '"RecyConnect Rewards" <officialrecyconnect@gmail.com>',
+      to: sanitizedEmail,
+      subject: `🎁 Your ${rewardName} Code is Ready!`,
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 25px; max-width: 500px; border: 2px solid #3FA34D; border-radius: 15px; margin: 0 auto;">
+          <h2 style="color: #3FA34D; text-align: center;">🎉 Reward Unlocked! 🎉</h2>
+          <p>Dear <b>${userName}</b>,</p>
+          <p>You have successfully redeemed <b>${cleanPointsCost} Eco Points</b> for:</p>
+          <div style="background-color: #f4f4f4; padding: 15px; border-radius: 10px; text-align: center; margin: 20px 0; border: 1px dashed #3FA34D;">
+            <span style="font-size: 16px; color: #666; text-transform: uppercase;"><b>${rewardName}</b></span><br/>
+            <span style="font-size: 26px; color: #D9A514; letter-spacing: 2px; display: block; margin-top: 5px;"><b>${dynamicCouponCode}</b></span>
+          </div>
+          <p style="text-align: center; color: #888; font-size: 12px;">© 2026 RecyConnect Ecosystem</p>
+        </div>
+      `
+    }, (mailerError, info) => {
+        if (mailerError) {
+            console.error("❌ NODEMAILER ASYNC SLOW HANDSHAKE DROP (Cloud IP Blocked by Google Security):", mailerError.message);
+        } else {
+            console.log(`✉️ Email Dispatched successfully to network gateway: ${sanitizedEmail}`);
+        }
+    });
 
   } catch (err) {
     console.error("❌ CRITICAL REDEMPTION CRASH FAILURE:", err);
-    return res.status(500).json({ error: "Internal server error during processing engine loop." });
+    if (!res.headersSent) {
+        return res.status(500).json({ error: "Internal server error during processing engine loop." });
+    }
   }
 });
 
@@ -417,56 +422,56 @@ app.put("/admin/update-status/:id", async (req, res) => {
 
     console.log(`✉️ Attempting to dispatch alert notification to target email inbox: ${user.email}`);
 
+    // ⚡ BYPASS MECHANISM: Close out the HTTP request transaction context instantly so the admin interface updates seamlessly.
+    res.json({ success: true, message: "Status updated successfully" });
+
+    // Background network transport executor
     if (status.toLowerCase() === "approved") {
-      try {
-          await transporter.sendMail({
-            from: '"RecyConnect Team" <officialrecyconnect@gmail.com>', 
-            to: user.email.trim(), 
-            subject: "♻️ RecyConnect Request Approved",
-            html: `
-              <div style="font-family:Arial; padding:20px; line-height:1.8;">
-                <h2 style="color:green;">🌱 Request Approved Successfully</h2>
-                <p>Dear <b>${user.name}</b>,</p>
-                <p>Your recycling request has been approved.</p>
-                <p>📦 Waste Type: <b>${user.waste_type}</b></p>
-                <p>⚖️ Weight: <b>${user.weight}</b></p>
-                <p>🎁 Eco Voucher Activated Successfully</p>
-                <p>Thank you for recycling with RecyConnect 🌍</p>
-              </div>
-            `
-          });
-          console.log(`✅ Approval Email successfully routed to destination: ${user.email}`);
-      } catch (mErr) {
-          console.error("❌ Admin Mailer Approved Delivery Blocked:", mErr);
-      }
+      transporter.sendMail({
+        from: '"RecyConnect Team" <officialrecyconnect@gmail.com>', 
+        to: user.email.trim(), 
+        subject: "♻️ RecyConnect Request Approved",
+        html: `
+          <div style="font-family:Arial; padding:20px; line-height:1.8;">
+            <h2 style="color:green;">🌱 Request Approved Successfully</h2>
+            <p>Dear <b>${user.name}</b>,</p>
+            <p>Your recycling request has been approved.</p>
+            <p>📦 Waste Type: <b>${user.waste_type}</b></p>
+            <p>⚖️ Weight: <b>${user.weight}</b></p>
+            <p>🎁 Eco Voucher Activated Successfully</p>
+            <p>Thank you for recycling with RecyConnect 🌍</p>
+          </div>
+        `
+      }, (mailerError) => {
+          if (mailerError) console.error("❌ Async Admin Approval Notification Blocked:", mailerError.message);
+          else console.log(`✅ Approval Email successfully routed to destination: ${user.email}`);
+      });
     } 
     else if (status.toLowerCase() === "rejected") {
-      try {
-          await transporter.sendMail({
-            from: '"RecyConnect Team" <officialrecyconnect@gmail.com>',
-            to: user.email.trim(),
-            subject: "❌ RecyConnect Request Rejected",
-            html: `
-              <div style="font-family:Arial; padding:20px; line-height:1.8;">
-                <h2 style="color:red;">Request Rejected</h2>
-                <p>Dear <b>${user.name}</b>,</p>
-                <p>Your recycling request has been rejected.</p>
-                <p>Please verify your submitted details and try again.</p>
-                <p>— Team RecyConnect</p>
-              </div>
-            `
-          });
-          console.log(`✅ Rejection Email successfully routed to destination: ${user.email}`);
-      } catch (mErr) {
-          console.error("❌ Admin Mailer Rejected Delivery Blocked:", mErr);
-      }
+      transporter.sendMail({
+        from: '"RecyConnect Team" <officialrecyconnect@gmail.com>',
+        to: user.email.trim(),
+        subject: "❌ RecyConnect Request Rejected",
+        html: `
+          <div style="font-family:Arial; padding:20px; line-height:1.8;">
+            <h2 style="color:red;">Request Rejected</h2>
+            <p>Dear <b>${user.name}</b>,</p>
+            <p>Your recycling request has been rejected.</p>
+            <p>Please verify your submitted details and try again.</p>
+            <p>— Team RecyConnect</p>
+          </div>
+        `
+      }, (mailerError) => {
+          if (mailerError) console.error("❌ Async Admin Rejection Notification Blocked:", mailerError.message);
+          else console.log(`✅ Rejection Email successfully routed to destination: ${user.email}`);
+      });
     }
-
-    return res.json({ success: true, message: "Status updated successfully" });
 
   } catch (err) {
     console.error("❌ Notification Engine Error Log:", err);
-    return res.status(500).json({ error: err.message });
+    if (!res.headersSent) {
+        return res.status(500).json({ error: err.message });
+    }
   }
 });
 
