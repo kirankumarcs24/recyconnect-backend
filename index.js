@@ -17,15 +17,14 @@ const pool = new Pool({
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true, // Forces a secure SSL handshake layout
+    host: "smtp-relay.brevo.com",
+    port: 587,
+    secure: false, // Port 587 uses false for secure, then upgrades via STARTTLS
     auth: {
         user: process.env.EMAIL_USER, 
         pass: process.env.EMAIL_PASS  
     },
     tls: {
-        // Prevents Render from failing authentication on random cloud networks
         rejectUnauthorized: false
     }
 });
