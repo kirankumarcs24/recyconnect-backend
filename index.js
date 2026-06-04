@@ -644,6 +644,7 @@ app.get("/", (req, res) => {
 const PORT = 5000;
 // ================= GET ROUTE: FETCH USER DASHBOARD DATA =================
 // ================= FIXED GET ROUTE: FETCH USER DASHBOARD DATA =================
+// ================= FIXED GET ROUTE: FETCH USER DASHBOARD DATA =================
 app.get('/dashboard-data', async (req, res) => {
   const { email } = req.query;
 
@@ -652,13 +653,11 @@ app.get('/dashboard-data', async (req, res) => {
   }
 
   try {
-    // 1. Get the user's ID first using their email
     const user = await getCurrentUser(email);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // 2. Query the CORRECT table name (waste_submissions) using the user_id integer
     const submissionsQuery = `
       SELECT id, waste_type, weight, status, TO_CHAR(pickup_date, 'YYYY-MM-DD') as pickup_date, points_earned
       FROM waste_submissions 
@@ -667,7 +666,6 @@ app.get('/dashboard-data', async (req, res) => {
     `;
     const result = await pool.query(submissionsQuery, [user.id]);
 
-    // Send the data cleanly back to the mobile app
     return res.status(200).json({
       success: true,
       submissions: result.rows
@@ -679,6 +677,11 @@ app.get('/dashboard-data', async (req, res) => {
   }
 });
 
+// ✅ CLEAN SINGLE LISTENER (No duplicate const declarations!)
+// ✅ This automatically reads a cloud platform's dynamic port, or defaults to 5000 locally
+const PORT = process.env.PORT || 5000;
+
+// ✅ Listen on 0.0.0.0 so the cloud engine can routing public internet traffic to your app
 app.listen(PORT, "0.0.0.0", () => {
-  console.log("Server running on http://0.0.0.0:" + PORT);
+  console.log(`🚀 Global Server is officially running live on port ${PORT}`);
 });
