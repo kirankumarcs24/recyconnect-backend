@@ -17,14 +17,15 @@ const pool = new Pool({
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-    host: "smtp-relay.brevo.com",
-    port: 587,
-    secure: false, // Port 587 uses false for secure, then upgrades via STARTTLS
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true, // Forces a secure SSL handshake layout
     auth: {
         user: process.env.EMAIL_USER, 
         pass: process.env.EMAIL_PASS  
     },
     tls: {
+        // Prevents Render from failing authentication on random cloud networks
         rejectUnauthorized: false
     }
 });
@@ -104,9 +105,13 @@ initializeDatabase();
 // --- API Routes ---
 
 const getCurrentUser = async (email) => {
+  if (!email || email.trim() === "") {
+    console.log("⚠️ Session Warning: Attempted to query user with empty or missing email string.");
+    return null;
+  }
   const result = await pool.query(
-    "SELECT * FROM users WHERE email = $1 ORDER BY created_at DESC LIMIT 1",
-    [email]
+    "SELECT * FROM users WHERE LOWER(email) = $1 ORDER BY created_at DESC LIMIT 1",
+    [email.trim().toLowerCase()]
   );
   return result.rows[0] || null;
 };
