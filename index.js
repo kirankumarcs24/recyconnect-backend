@@ -5,9 +5,7 @@ const bcrypt = require("bcryptjs");
 const OpenAI = require("openai");
 const app = express();
 
-
 const connectionString = "postgresql://neondb_owner:npg_DPrAdCa7W4HZ@ep-dawn-shape-a4im99ti-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require";
-
 
 const pool = new Pool({
   connectionString: connectionString,
@@ -21,7 +19,6 @@ const nodemailer = require("nodemailer");
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-        // 🌟 Tells your code to look at the Render dashboard values!
         user: process.env.EMAIL_USER, 
         pass: process.env.EMAIL_PASS  
     }
@@ -40,6 +37,7 @@ app.use(
     path.join(__dirname, "RECYCONNECT")
   )
 );
+
 // Point calculation
 const pointsPerKg = {
   "Plastic Bottles": 10,
@@ -54,7 +52,6 @@ async function initializeDatabase() {
   try {
     console.log("⏳ Attempting to connect to Neon Database...");
     
-    // Create users table 
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -66,7 +63,6 @@ async function initializeDatabase() {
       )
     `);
 
-    // Create waste submissions table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS waste_submissions (
         id SERIAL PRIMARY KEY,
@@ -81,7 +77,6 @@ async function initializeDatabase() {
       )
     `);
 
-    // Create redemptions table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS redemptions (
         id SERIAL PRIMARY KEY,
@@ -162,7 +157,7 @@ app.post("/reset-password", async (req, res) => {
   }
 });
 
-
+// CHATBOT
 app.post("/chat", async (req, res) => {
   try {
     const { message } = req.body;
@@ -170,7 +165,6 @@ app.post("/chat", async (req, res) => {
     
     let botMessage = "I'm not sure about that, but try asking about 'plastic', 'paper', 'points', or 'rewards'!";
 
-    // Smart Keyword Detection (No API Key needed)
     if (lowerMsg.includes("hello") || lowerMsg.includes("hi")) {
       botMessage = "Hello! I am RecyBot. Ask me about recycling rates or how to earn points.";
     } 
@@ -193,7 +187,6 @@ app.post("/chat", async (req, res) => {
       botMessage = "You're welcome! Keep recycling to save the planet! 🌍";
     }
 
-    // Simulate thinking delay for realism
     setTimeout(() => {
         res.json({ reply: botMessage });
     }, 500);
@@ -203,32 +196,25 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-
 // SUBMIT WASTE
-// ================= FIXED SUBMIT WASTE ROUTE =================
 app.post("/submit-waste", async (req, res) => {
   try {
     const { email, wasteType, weight, address, pickupDate } = req.body;
-
-    // 📺 ADD THE INSPECTOR LOG LINE HERE:
     console.log(`📥 Incoming waste submission request received for email account: ${email}`);
     
     if (!email || !wasteType || !weight || !address || !pickupDate) {
       return res.status(400).json({ error: "Missing required submission fields" });
     }
 
-    // 1. Find the true user profile linked to this email address
     const user = await getCurrentUser(email);
     if (!user) {
       console.log(`⚠️ Submission failed: No account exists for email: ${email}`);
       return res.status(404).json({ error: "User account not found" });
     }
 
-    // 2. Calculate point multipliers accurately
     const pointsPerKgValue = pointsPerKg[wasteType] || 10;
     const pointsEarned = Math.round(parseFloat(weight) * pointsPerKgValue);
 
-    // 3. Insert into the CORRECT table name (waste_submissions) using the user's internal ID
     const insertQuery = `
       INSERT INTO waste_submissions (user_id, waste_type, weight, address, pickup_date, points_earned, status) 
       VALUES ($1, $2, $3, $4, $5, $6, 'Pending') 
@@ -243,12 +229,9 @@ app.post("/submit-waste", async (req, res) => {
       pointsEarned
     ]);
 
-    // 4. Update user's cumulative point ledger profile
     await pool.query("UPDATE users SET points = points + $1 WHERE id = $2", [pointsEarned, user.id]);
-    
     console.log(`✅ Success: Submission stored for user ID ${user.id} (${email}). Earned ${pointsEarned} pts.`);
 
-    // 5. Send complete status payload back to Flutter so it stops loading
     return res.status(201).json({ 
       success: true,
       message: "Waste request successfully logged!", 
@@ -262,18 +245,15 @@ app.post("/submit-waste", async (req, res) => {
   }
 });
 
-// POST: REDEEM REWARD (FIXED ID TO EMAIL COLUMN LOOKUP)
+// POST: REDEEM REWARD
 app.post("/redeem-reward", async (req, res) => {
   try {
     const { email, rewardName, pointsCost } = req.body;
-
-    // 🧼 Clean up inputs
     const sanitizedEmail = email ? email.trim().toLowerCase() : "";
     const cleanPointsCost = parseInt(pointsCost);
 
     console.log(`📥 Processing redemption: ${sanitizedEmail} trying to claim '${rewardName}' for ${cleanPointsCost} pts`);
 
-    // 1. Fetch user data using clean lowercase matching rules
     const userResult = await pool.query(
       "SELECT name, points FROM users WHERE LOWER(email) = $1", 
       [sanitizedEmail]
@@ -292,38 +272,39 @@ app.post("/redeem-reward", async (req, res) => {
       return res.status(400).json({ error: "Insufficient points balance." });
     }
 
-    // 🔑 FIXED: Update the points balance using the EMAIL column instead of an ID column!
     await pool.query(
       "UPDATE users SET points = points - $1 WHERE LOWER(email) = $2",
       [cleanPointsCost, sanitizedEmail]
     );
 
     console.log(`✅ Database Updated: Successfully subtracted ${cleanPointsCost} points from ${sanitizedEmail}`);
-
-    // Generate unique mockup voucher key
     const dynamicCouponCode = "RC-" + Math.random().toString(36).substr(2, 9).toUpperCase();
 
-    // 2. Dispatch validation email confirmation via Nodemailer
-    await transporter.sendMail({
-      from: '"RecyConnect Rewards" <officialrecyconnect@gmail.com>',
-      to: sanitizedEmail,
-      subject: `🎁 Your ${rewardName} Code is Ready!`,
-      html: `
-        <div style="font-family: Arial, sans-serif; padding: 25px; max-width: 500px; border: 2px solid #3FA34D; border-radius: 15px; margin: 0 auto;">
-          <h2 style="color: #3FA34D; text-align: center;">🎉 Reward Unlocked! 🎉</h2>
-          <p>Dear <b>${userName}</b>,</p>
-          <p>You have successfully redeemed <b>${cleanPointsCost} Eco Points</b> for:</p>
-          <div style="background-color: #f4f4f4; padding: 15px; border-radius: 10px; text-align: center; margin: 20px 0; border: 1px dashed #3FA34D;">
-            <span style="font-size: 16px; color: #666; text-transform: uppercase;"><b>${rewardName}</b></span><br/>
-            <span style="font-size: 26px; color: #D9A514; letter-spacing: 2px; display: block; margin-top: 5px;"><b>${dynamicCouponCode}</b></span>
-          </div>
-          <p style="text-align: center; color: #888; font-size: 12px;">© 2026 RecyConnect Ecosystem</p>
-        </div>
-      `
-    });
+    // 🛡️ ISOLATED SAFETY BUFFER: Keeps the app loader running smoothly even if email delivery drops
+    try {
+        await transporter.sendMail({
+          from: '"RecyConnect Rewards" <officialrecyconnect@gmail.com>',
+          to: sanitizedEmail,
+          subject: `🎁 Your ${rewardName} Code is Ready!`,
+          html: `
+            <div style="font-family: Arial, sans-serif; padding: 25px; max-width: 500px; border: 2px solid #3FA34D; border-radius: 15px; margin: 0 auto;">
+              <h2 style="color: #3FA34D; text-align: center;">🎉 Reward Unlocked! 🎉</h2>
+              <p>Dear <b>${userName}</b>,</p>
+              <p>You have successfully redeemed <b>${cleanPointsCost} Eco Points</b> for:</p>
+              <div style="background-color: #f4f4f4; padding: 15px; border-radius: 10px; text-align: center; margin: 20px 0; border: 1px dashed #3FA34D;">
+                <span style="font-size: 16px; color: #666; text-transform: uppercase;"><b>${rewardName}</b></span><br/>
+                <span style="font-size: 26px; color: #D9A514; letter-spacing: 2px; display: block; margin-top: 5px;"><b>${dynamicCouponCode}</b></span>
+              </div>
+              <p style="text-align: center; color: #888; font-size: 12px;">© 2026 RecyConnect Ecosystem</p>
+            </div>
+          `
+        });
+        console.log(`✉️ Email Dispatched successfully to: ${sanitizedEmail}`);
+    } catch (mailerError) {
+        console.error("❌ NODEMAILER ENGINES BLOCKED SIGNIN (Check Gmail App Passwords configuration):", mailerError);
+    }
 
-    console.log(`✉️ Email Dispatched successfully to: ${sanitizedEmail}`);
-    return res.json({ success: true, message: "Redeemed successfully!" });
+    return res.status(200).json({ success: true, message: "Redeemed successfully!", code: dynamicCouponCode });
 
   } catch (err) {
     console.error("❌ CRITICAL REDEMPTION CRASH FAILURE:", err);
@@ -331,7 +312,7 @@ app.post("/redeem-reward", async (req, res) => {
   }
 });
 
-// REDEEM
+// REDEEM OLD
 app.post("/redeem", async (req, res) => {
   try {
     const { email, rewardType, pointsRequired } = req.body;
@@ -382,13 +363,9 @@ app.get("/user/:email", async (req, res) => {
 });
 
 // ADMIN - GET ALL WASTE REQUESTS
-// ADMIN - GET ALL WASTE REQUESTS
 app.get("/admin/requests", async (req, res) => {
-
   try {
-
     const result = await pool.query(`
-
       SELECT 
         waste_submissions.id,
         users.name,
@@ -399,39 +376,27 @@ app.get("/admin/requests", async (req, res) => {
         waste_submissions.pickup_date,
         waste_submissions.points_earned,
         waste_submissions.status
-
       FROM waste_submissions
-
-      JOIN users
-      ON users.id = waste_submissions.user_id
-
+      JOIN users ON users.id = waste_submissions.user_id
       ORDER BY waste_submissions.created_at DESC
-
     `);
-
     res.json(result.rows);
-
   } catch (err) {
-
-    res.status(500).json({
-      error: err.message
-    });
-
+    res.status(500).json({ error: err.message });
   }
-
 });
+
+// ADMIN UPDATE STATUS
 app.put("/admin/update-status/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
 
-    // 1. UPDATE STATUS
     await pool.query(
       "UPDATE waste_submissions SET status = $1 WHERE id = $2",
       [status, id]
     );
 
-    // 2. GET USER DETAILS
     const result = await pool.query(`
       SELECT
         users.name,
@@ -445,214 +410,132 @@ app.put("/admin/update-status/:id", async (req, res) => {
 
     const user = result.rows[0];
 
-    // 🚨 SAFETY PATROL: If the database lookup failed, stop before sending to the wrong person!
     if (!user || !user.email) {
       console.log(`⚠️ Warning: Mail skipped. No valid user account found linked to submission ID: ${id}`);
       return res.json({ success: true, message: "Status updated, but no email sent (User profile missing)" });
     }
 
-    // 📺 PRINT DESTINATION LOG: Check your VS Code terminal to see this real-time print out!
     console.log(`✉️ Attempting to dispatch alert notification to target email inbox: ${user.email}`);
 
-    // 3. SEND MAIL ONLY IF APPROVED
     if (status.toLowerCase() === "approved") {
-      await transporter.sendMail({
-        from: '"RecyConnect Team" <officialrecyconnect@gmail.com>', // Formatted beautifully
-        to: user.email.trim(), // Strips out accidental spacing loops
-        subject: "♻️ RecyConnect Request Approved",
-        html: `
-          <div style="font-family:Arial; padding:20px; line-height:1.8;">
-            <h2 style="color:green;">🌱 Request Approved Successfully</h2>
-            <p>Dear <b>${user.name}</b>,</p>
-            <p>Your recycling request has been approved.</p>
-            <p>📦 Waste Type: <b>${user.waste_type}</b></p>
-            <p>⚖️ Weight: <b>${user.weight}</b></p>
-            <p>🎁 Eco Voucher Activated Successfully</p>
-            <p>Thank you for recycling with RecyConnect 🌍</p>
-          </div>
-        `
-      });
-      console.log(`✅ Approval Email successfully routed to destination: ${user.email}`);
+      try {
+          await transporter.sendMail({
+            from: '"RecyConnect Team" <officialrecyconnect@gmail.com>', 
+            to: user.email.trim(), 
+            subject: "♻️ RecyConnect Request Approved",
+            html: `
+              <div style="font-family:Arial; padding:20px; line-height:1.8;">
+                <h2 style="color:green;">🌱 Request Approved Successfully</h2>
+                <p>Dear <b>${user.name}</b>,</p>
+                <p>Your recycling request has been approved.</p>
+                <p>📦 Waste Type: <b>${user.waste_type}</b></p>
+                <p>⚖️ Weight: <b>${user.weight}</b></p>
+                <p>🎁 Eco Voucher Activated Successfully</p>
+                <p>Thank you for recycling with RecyConnect 🌍</p>
+              </div>
+            `
+          });
+          console.log(`✅ Approval Email successfully routed to destination: ${user.email}`);
+      } catch (mErr) {
+          console.error("❌ Admin Mailer Approved Delivery Blocked:", mErr);
+      }
     } 
     else if (status.toLowerCase() === "rejected") {
-      await transporter.sendMail({
-        from: '"RecyConnect Team" <officialrecyconnect@gmail.com>',
-        to: user.email.trim(),
-        subject: "❌ RecyConnect Request Rejected",
-        html: `
-          <div style="font-family:Arial; padding:20px; line-height:1.8;">
-            <h2 style="color:red;">Request Rejected</h2>
-            <p>Dear <b>${user.name}</b>,</p>
-            <p>Your recycling request has been rejected.</p>
-            <p>Please verify your submitted details and try again.</p>
-            <p>— Team RecyConnect</p>
-          </div>
-        `
-      });
-      console.log(`✅ Rejection Email successfully routed to destination: ${user.email}`);
+      try {
+          await transporter.sendMail({
+            from: '"RecyConnect Team" <officialrecyconnect@gmail.com>',
+            to: user.email.trim(),
+            subject: "❌ RecyConnect Request Rejected",
+            html: `
+              <div style="font-family:Arial; padding:20px; line-height:1.8;">
+                <h2 style="color:red;">Request Rejected</h2>
+                <p>Dear <b>${user.name}</b>,</p>
+                <p>Your recycling request has been rejected.</p>
+                <p>Please verify your submitted details and try again.</p>
+                <p>— Team RecyConnect</p>
+              </div>
+            `
+          });
+          console.log(`✅ Rejection Email successfully routed to destination: ${user.email}`);
+      } catch (mErr) {
+          console.error("❌ Admin Mailer Rejected Delivery Blocked:", mErr);
+      }
     }
 
-    res.json({ success: true, message: "Status updated successfully" });
+    return res.json({ success: true, message: "Status updated successfully" });
 
   } catch (err) {
     console.error("❌ Notification Engine Error Log:", err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// ADMIN DASHBOARD STATS
+app.get("/admin/stats", async (req, res) => {
+  try {
+    const totalUsers = await pool.query("SELECT COUNT(*) FROM users");
+    const totalRequests = await pool.query("SELECT COUNT(*) FROM waste_submissions");
+    const approvedRequests = await pool.query("SELECT COUNT(*) FROM waste_submissions WHERE status = 'Approved'");
+    const pendingRequests = await pool.query("SELECT COUNT(*) FROM waste_submissions WHERE status = 'Pending'");
+
+    res.json({
+      totalUsers: totalUsers.rows[0].count,
+      totalRequests: totalRequests.rows[0].count,
+      approvedRequests: approvedRequests.rows[0].count,
+      pendingRequests: pendingRequests.rows[0].count
+    });
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
-// ADMIN DASHBOARD STATS
-app.get("/admin/stats", async (req, res) => {
-
-  try {
-
-    const totalUsers = await pool.query(
-      "SELECT COUNT(*) FROM users"
-    );
-
-    const totalRequests = await pool.query(
-      "SELECT COUNT(*) FROM waste_submissions"
-    );
-
-    const approvedRequests = await pool.query(
-      "SELECT COUNT(*) FROM waste_submissions WHERE status = 'Approved'"
-    );
-
-    const pendingRequests = await pool.query(
-      "SELECT COUNT(*) FROM waste_submissions WHERE status = 'Pending'"
-    );
-
-    res.json({
-
-      totalUsers: totalUsers.rows[0].count,
-
-      totalRequests: totalRequests.rows[0].count,
-
-      approvedRequests: approvedRequests.rows[0].count,
-
-      pendingRequests: pendingRequests.rows[0].count
-
-    });
-
-  } catch (err) {
-
-    res.status(500).json({
-      error: err.message
-    });
-
-  }
-
-});
-
 
 // ADMIN USERS LIST
 app.get("/admin/users", async (req, res) => {
-
   try {
-
     const result = await pool.query(`
-
-      SELECT
-        name,
-        email,
-        points
-
-      FROM users
-
-      ORDER BY points DESC
-
+      SELECT name, email, points FROM users ORDER BY points DESC
     `);
-
     res.json(result.rows);
-
   } catch (err) {
-
-    res.status(500).json({
-      error: err.message
-    });
-
+    res.status(500).json({ error: err.message });
   }
-
 });
 
+// ADMIN ANALYTICS
 app.get("/admin/analytics", async (req, res) => {
-
   try {
-
-    // WASTE TYPE DATA
     const result = await pool.query(`
-
-      SELECT
-        waste_type,
-        SUM(weight) AS total_weight
-
-      FROM waste_submissions
-
-      GROUP BY waste_type
-
-      ORDER BY total_weight DESC
-
+      SELECT waste_type, SUM(weight) AS total_weight FROM waste_submissions GROUP BY waste_type ORDER BY total_weight DESC
     `);
+    const totalWasteResult = await pool.query(`SELECT SUM(weight) AS total FROM waste_submissions`);
+    const totalWaste = totalWasteResult.rows[0].total || 0;
+    const highestWasteType = result.rows.length > 0 ? result.rows[0].waste_type : "N/A";
 
-    // TOTAL WASTE
-    const totalWasteResult =
-      await pool.query(`
-
-        SELECT
-          SUM(weight) AS total
-
-        FROM waste_submissions
-
-      `);
-
-    const totalWaste =
-      totalWasteResult.rows[0].total || 0;
-
-    // HIGHEST WASTE TYPE
-    const highestWasteType =
-      result.rows.length > 0
-        ? result.rows[0].waste_type
-        : "N/A";
-
-    // SEND RESPONSE
     res.json({
-
       wasteData: result.rows,
-
       totalWaste: totalWaste,
-
       highestWasteType: highestWasteType
-
     });
-
   } catch (err) {
-
-    res.status(500).json({
-      error: err.message
-    });
-
+    res.status(500).json({ error: err.message });
   }
-
 });
+
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "RECYCONNECT", "index.html"));
 });
 
-//const PORT = 5000;
-// ================= GET ROUTE: FETCH USER DASHBOARD DATA =================
-// ================= FIXED GET ROUTE: FETCH USER DASHBOARD DATA =================
-// ================= FIXED GET ROUTE: FETCH USER DASHBOARD DATA =================
+// FETCH USER DASHBOARD DATA
 app.get('/dashboard-data', async (req, res) => {
   const { email } = req.query;
-
   if (!email) {
     return res.status(400).json({ error: "Email parameter is required" });
   }
-
   try {
     const user = await getCurrentUser(email);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
-
     const submissionsQuery = `
       SELECT id, waste_type, weight, status, TO_CHAR(pickup_date, 'YYYY-MM-DD') as pickup_date, points_earned
       FROM waste_submissions 
@@ -660,23 +543,14 @@ app.get('/dashboard-data', async (req, res) => {
       ORDER BY id DESC;
     `;
     const result = await pool.query(submissionsQuery, [user.id]);
-
-    return res.status(200).json({
-      success: true,
-      submissions: result.rows
-    });
-
+    return res.status(200).json({ success: true, submissions: result.rows });
   } catch (error) {
     console.error("❌ Failed to fetch dashboard data:", error);
     return res.status(500).json({ error: "Internal database retrieval error." });
   }
 });
 
-// ✅ CLEAN SINGLE LISTENER (No duplicate const declarations!)
-// ✅ This automatically reads a cloud platform's dynamic port, or defaults to 5000 locally
 const PORT = process.env.PORT || 5000;
-
-// ✅ Listen on 0.0.0.0 so the cloud engine can routing public internet traffic to your app
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Global Server is officially running live on port ${PORT}`);
 });
