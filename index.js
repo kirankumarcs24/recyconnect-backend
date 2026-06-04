@@ -19,17 +19,12 @@ const pool = new Pool({
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-
-  service: "gmail",
-
-  auth: {
-
-    user: "officialrecyconnect@gmail.com",
-
-    pass: "yjdwmegigppk sezt"
-
-  }
-
+    service: "gmail",
+    auth: {
+        // 🌟 Tells your code to look at the Render dashboard values!
+        user: process.env.EMAIL_USER, 
+        pass: process.env.EMAIL_PASS  
+    }
 });
 
 // Middleware
@@ -641,7 +636,7 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "RECYCONNECT", "index.html"));
 });
 
-const PORT = 5000;
+//const PORT = 5000;
 // ================= GET ROUTE: FETCH USER DASHBOARD DATA =================
 // ================= FIXED GET ROUTE: FETCH USER DASHBOARD DATA =================
 // ================= FIXED GET ROUTE: FETCH USER DASHBOARD DATA =================
